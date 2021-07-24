@@ -47,6 +47,3 @@ python script_run_targeted.py
 python script_run_nontargeted.py
 
 ```
-
-
-https://github.com/peteanderson80/bottom-up-attention
