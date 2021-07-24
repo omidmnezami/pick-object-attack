@@ -17,7 +17,7 @@ from copy import deepcopy
 #caffe.set_mode_gpu()
 #caffe.set_device(0)
 
-
+# change the following path as your local path
 cfg_from_file('experiments/cfgs/faster_rcnn_end2end_resnet.yml')
 
 if __name__ == '__main__':

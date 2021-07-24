@@ -11,7 +11,7 @@ Many recent studies have shown that deep neural models are vulnerable to adversa
 </p>
 
 ### Reference
-if you use our source code, please cite our paper:
+If you use our source code, please cite our paper:
 ```
 @article{nezami2020pick,
   title={Pick-Object-Attack: Type-Specific Adversarial Attack for Object Detection},
