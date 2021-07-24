@@ -8,9 +8,9 @@ import sys
 gpuID = int(sys.argv[1])
 
 if gpuID == 3:
-    imgs = np.load('./data/selected_images.npy')[:1000]
+    imgs = np.load('./selected_images.npy')[:1000]
 else:
-    imgs = np.load('./data/selected_images.npy')[300+350*(gpuID-2):300+350*(gpuID-1)]
+    imgs = np.load('./selected_images.npy')[300+350*(gpuID-2):300+350*(gpuID-1)]
 
 
 i = 0
