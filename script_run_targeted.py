@@ -21,8 +21,8 @@ for img in imgs:
     path, fileName = os.path.split(img)
     fileName_main = fileName.replace('.jpg','')
 
-    if fileName_main in open('results.txt').read():
-        continue
+    # if fileName_main in open('results.txt').read():
+    #     continue
 
     for r in range(10):
         random_class = np.random.randint(1599)+1
