@@ -20,16 +20,9 @@ from copy import deepcopy
 
 cfg_from_file('experiments/cfgs/faster_rcnn_end2end_resnet.yml')
 
-#print cfg['TEST']['RPN_POST_NMS_TOP_N'], 'before'
-#cfg['TEST']['SCALES'] = (125,)
-#cfg['TEST']['RPN_POST_NMS_TOP_N'] = 30
-#print cfg['TEST']['RPN_POST_NMS_TOP_N'], 'after'
-#sys.exit()
-
 if __name__ == '__main__':
     t0 = time.time()
     input_file = sys.argv[1]
-    #target_idx = int(sys.argv[2]) # target class
     lr = float(sys.argv[2]) # initial learning rate
     targeted = bool(sys.argv[3]=='True')
     print(targeted)
@@ -132,50 +125,23 @@ if __name__ == '__main__':
 
     a=net.blobs['cls_score'].data[:, 1:]
     print np.unravel_index(a.argmax(), a.shape)
-    #target_idx = Counter(cls_score_all).most_common()[0][0]
-    #target_idx= np.unravel_index(a.argmax(), a.shape)[1]+1
 
     output_file_numpy = 'all' + '_' + output_file_numpy
-    #sys.exit()
-
-    #target_idx = Counter(cls_score_all).most_common()[0][0]
-    #print target_idx, Counter(cls_score_all).most_common()
 
     print cls_score_all
     print cls_score_all.shape
-    #print np.where(cls_score_all==target_idx)
-    #print len(np.where(cls_score_all == target_idx)[0])
-    #print classes[target_idx], "the label of the targetted index"
 
     cls_boxes = net.blobs['rois'].data[:,1:5] / im_scales[0]
-    #m = np.zeros(adversarial_x.shape)
-
-    #for ind in np.where(cls_score_all==target_idx)[0]:
-    #    mul_attack_box = cls_boxes[ind]
-    #    print mul_attack_box
-    #    m[int(math.floor(mul_attack_box[1])):int(math.floor(mul_attack_box[3])),
-    #    int(math.floor(mul_attack_box[0])):int(math.floor(mul_attack_box[2])), :] = 1
     
     attack_try = 0
    
     remained_cls=list(set(range(1,1601)).difference(original_cls))
     target_idx = np.random.choice(remained_cls)
-    
-    #caffe.set_device(1)
-    #net = caffe.Net(prototxt_train, caffe.TEST, weights=weights)
-
-    #caffe.set_device(2)
-    #net = caffe.Net(prototxt_train, caffe.TEST, weights=weights)
  
     while (True):
         
         caffe.set_mode_gpu()
         caffe.set_device(gpuID)
-
-        #print "set device 1=============="
-        #caffe.set_device(1)
-        #print "after set device 1 ======="
-        #net = caffe.Net(prototxt_train, caffe.TEST, weights=weights)
 
         if (( attack_try +1 ) % 120 == 0): # change it to 10 later
             adversarial_x = single_start_point
@@ -218,38 +184,7 @@ if __name__ == '__main__':
         num_rois = net.blobs['rois'].data.shape[0]
         scores = net.blobs['cls_score'].data
         cls_score_all = scores[:, 1:].argmax(axis=1) + 1
-        #mul_attack_box_indx = np.where(cls_score_all == target_idx)[0]
-        #print "number of bounding boxes for attack",len(mul_attack_box_indx)
         print "number of rois", num_rois
-
-        # Think about what extra condition to add here if it's a targeted attack e.g. 'ocean'(index = 65) for the current image
-        #if targeted:
-        #      num_boxes = np.where(cls_score_all == new_class)[0]
-        #      print "number of boxes with target label",len(num_boxes)
-        #      probs = net.blobs['cls_prob'].data[num_boxes,new_class]
-        #      print("probabilities for target class:",probs)
-        #      if len(num_boxes) > 0:#and np.max(probs)>0.6:
-        #           np.save(output_file_numpy, adversarial_x)
-        #           np.save('probs_'+output_file_numpy, probs)
-        #           break
-        #      else:
-                   #mul_attack_box_indx = np.array([scores[:,new_class].argmax(axis=0)])
-                   #box = net.blobs['rois'].data[mul_attack_box_indx]
-                   #x1, y1, x2, y2 = box[0][1:5]
-                   #print np.any(m[int(math.floor(x1)):int(math.floor(x2)),int(math.floor(y1)):int(math.floor(y2))])
-		   #print box, 'box========='
-                   #print "new bounding box for attack", mul_attack_box_indx, "new bounding box for attack"
-	#	   boxes = net.blobs['rois'].data[:,1:5]/im_scales[0]
-		   #boxes_mask = filter(lambda x:np.any(m[int(math.floor(x[0])):int(math.floor(x[2])),int(math.floor(x[1])):int(math.floor(x[3]))]), boxes)
-		   #print '============', boxes_mask, 'boxes mask================'
-         #          indexes = [i for i,x in enumerate(boxes) if np.all(m[int(math.floor(x[1])):int(math.floor(x[3])),int(math.floor(x[0])):int(math.floor(x[2]))])]
-		   #print 'indexes', indexes, 'indexes'
-          #  	   indexes = np.array(indexes)
-	  #         mul_attack_box_indx = indexes[np.array([scores[indexes,new_class].argmax(axis=0)])]
-	  #	   print "new bounding box for attack", mul_attack_box_indx, "new bounding box for attack"
-		   #x = net.blobs['rois'].data[mul_attack_box_indx[0], 1:5]/im_scales[0]
-	           #print m[int(math.floor(x[1])):int(math.floor(x[3])),int(math.floor(x[0])):int(math.floor(x[2]))]
-		   #print x, m.shape 
        
         intersection_cls = set(cls_score_all).intersection(original_cls)
         print 'intersection_cls_len= ', len(intersection_cls) , 'intersection_cls= ', intersection_cls, 'target_idx= ', target_idx
@@ -257,21 +192,10 @@ if __name__ == '__main__':
         if len(intersection_cls)==0 and not targeted:
               np.save(output_file_numpy, adversarial_x)
 	      boxes = net.blobs['rois'].data[:,1:5]/im_scales[0]
-              #boxes_mask = filter(lambda x:np.any(m[int(math.floor(x[0])):int(math.floor(x[2])),int(math.floor(x[1])):int(math.floor(x[3]))]), boxes)
-              #print '============', boxes_mask, 'boxes mask================'
-              #indexes = [i for i,x in enumerate(boxes) if np.all(m[int(math.floor(x[1])):int(math.floor(x[3])),int(math.floor(x[0])):int(math.floor(x[2]))])]
-              #print 'indexes', indexes, 'indexes'
-              #indexes = np.array(indexes)
-              #mul_attack_box_indx = indexes[np.array([scores[indexes,new_class].argmax(axis=0)])]
               probs = net.blobs['cls_prob'].data
               np.save('original_cls_'+output_file_numpy, original_cls)
               np.save('probs_'+output_file_numpy, probs)
               break
-
-        #print "set device 0==========="
-        #caffe.set_device(0)
-        #net = caffe.Net(prototxt_train, caffe.TEST, weights=weights)
-        #caffe.set_mode_cpu()
 
         gt_labels = np.zeros((num_rois), dtype=float)
         gt_labels += -1
@@ -307,35 +231,19 @@ if __name__ == '__main__':
         if 'predicted_cls' in net.blobs:
             forward_kwargs['predicted_cls'] = blobs['predicted_cls'].astype(np.float32, copy=False)
 
-        #for key in net.blobs.keys():
-        #    if len(net.blobs[key].data.shape)>0 and net.blobs[key].data.shape[0] == num_rois:
-        #        arr_np = net.blobs[key].data[mul_attack_box_indx,:]
-        #        net.blobs[key].reshape(*(arr_np.shape))
-        #        net.blobs[key].data[...] = arr_np
-       
-        #print "set device 0==========="
-        #caffe.set_device(0) 
         print("starting forward pass")
         net.forward(start='roi_pool5',**forward_kwargs)
         caffe.set_mode_cpu()
-        #print "set device 2==========="
-
-        #caffe.set_device(gpuID+1)
-        #caffe.set_solver_count(2)
-        #caffe.set_solver_rank(gpuID+1)
-        #caffe.set_multiprocess(True)
 
         print("starting backward pass")
         grads = net.backward(diffs=['data'])
         print("backward pass done")
-        #caffe.set_mode_gpu()
         grad_data = grads['data']
         grad = grad_data * lr
         grad = np.squeeze(grad)
         grad = np.transpose(grad, (1, 2, 0))
         grad = cv2.resize(grad,(adversarial_x.shape[1],adversarial_x.shape[0]),interpolation=cv2.INTER_LINEAR)
         print np.nonzero(grad), 'image change before ========='
-	#grad *= m
         print np.nonzero(grad), 'image change after ========='
         if targeted:
              adversarial_x = np.clip(adversarial_x - grad, clip_min, clip_max)

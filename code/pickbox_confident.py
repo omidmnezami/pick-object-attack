@@ -19,12 +19,6 @@ from collections import Counter
 
 cfg_from_file('experiments/cfgs/faster_rcnn_end2end_resnet.yml')
 
-#print cfg['TEST']['RPN_POST_NMS_TOP_N'], 'before'
-#cfg['TEST']['SCALES'] = (125,)
-#cfg['TEST']['RPN_POST_NMS_TOP_N'] = 30
-#print cfg['TEST']['RPN_POST_NMS_TOP_N'], 'after'
-#sys.exit()
-
 if __name__ == '__main__':
     t0 = time.time()
     input_file = sys.argv[1]
@@ -133,9 +127,6 @@ if __name__ == '__main__':
 
     output_file_numpy = str(target_idx) + '_' + output_file_numpy
     #sys.exit()
-
-    #target_idx = Counter(cls_score_all).most_common()[0][0]
-    #print target_idx, Counter(cls_score_all).most_common()
     
     mul_attack_box_indx = np.where(cls_score_all == target_idx)[0]
 
@@ -155,22 +146,11 @@ if __name__ == '__main__':
         int(math.floor(mul_attack_box[0])):int(math.floor(mul_attack_box[2])), :] = 1
     
     attack_try = 0
-    
-    #caffe.set_device(1)
-    #net = caffe.Net(prototxt_train, caffe.TEST, weights=weights)
-
-    #caffe.set_device(2)
-    #net = caffe.Net(prototxt_train, caffe.TEST, weights=weights)
  
     while (True):
         
         caffe.set_mode_gpu()
         caffe.set_device(gpuID)
-
-        #print "set device 1=============="
-        #caffe.set_device(1)
-        #print "after set device 1 ======="
-        #net = caffe.Net(prototxt_train, caffe.TEST, weights=weights)
 
         if (( attack_try +1 ) % 60 == 0): # change it to 10 later
             adversarial_x = single_start_point
@@ -217,7 +197,6 @@ if __name__ == '__main__':
         print "number of bounding boxes for attack",len(mul_attack_box_indx)
         print "number of rois", num_rois
 
-        # Think about what extra condition to add here if it's a targeted attack e.g. 'ocean'(index = 65) for the current image
         if len(mul_attack_box_indx)==0 and targeted:
               num_boxes = np.where(cls_score_all == new_class)[0]
               print "number of boxes with target label",len(num_boxes)
@@ -228,32 +207,16 @@ if __name__ == '__main__':
                    np.save('probs_'+output_file_numpy, probs)
                    break
               else:
-                   #mul_attack_box_indx = np.array([scores[:,new_class].argmax(axis=0)])
-                   #box = net.blobs['rois'].data[mul_attack_box_indx]
-                   #x1, y1, x2, y2 = box[0][1:5]
-                   #print np.any(m[int(math.floor(x1)):int(math.floor(x2)),int(math.floor(y1)):int(math.floor(y2))])
-		   #print box, 'box========='
-                   #print "new bounding box for attack", mul_attack_box_indx, "new bounding box for attack"
 		   boxes = net.blobs['rois'].data[:,1:5]/im_scales[0]
-		   #boxes_mask = filter(lambda x:np.any(m[int(math.floor(x[0])):int(math.floor(x[2])),int(math.floor(x[1])):int(math.floor(x[3]))]), boxes)
-		   #print '============', boxes_mask, 'boxes mask================'
                    indexes = [i for i,x in enumerate(boxes) if np.any(m[int(math.floor(x[1])):int(math.floor(x[3])),int(math.floor(x[0])):int(math.floor(x[2]))])]
 		   print 'indexes', indexes, 'indexes'
             	   indexes = np.array(indexes)
 	           mul_attack_box_indx = indexes[np.array([scores[indexes,new_class].argmax(axis=0)])]
 		   print "new bounding box for attack", mul_attack_box_indx, "new bounding box for attack"
-		   #x = net.blobs['rois'].data[mul_attack_box_indx[0], 1:5]/im_scales[0]
-	           #print m[int(math.floor(x[1])):int(math.floor(x[3])),int(math.floor(x[0])):int(math.floor(x[2]))]
-		   #print x, m.shape 
               		
         elif len(mul_attack_box_indx)==0 and not targeted:
               np.save(output_file_numpy, adversarial_x)
               break
-
-        #print "set device 0==========="
-        #caffe.set_device(0)
-        #net = caffe.Net(prototxt_train, caffe.TEST, weights=weights)
-        #caffe.set_mode_cpu()
 
         gt_labels = np.zeros((len(mul_attack_box_indx)), dtype=float)
         gt_labels += -1
@@ -293,18 +256,10 @@ if __name__ == '__main__':
                 arr_np = net.blobs[key].data[mul_attack_box_indx,:]
                 net.blobs[key].reshape(*(arr_np.shape))
                 net.blobs[key].data[...] = arr_np
-       
-        #print "set device 0==========="
-        #caffe.set_device(0) 
+
         print("starting forward pass")
         net.forward(start='roi_pool5',**forward_kwargs)
         caffe.set_mode_cpu()
-        #print "set device 2==========="
-
-        #caffe.set_device(gpuID+1)
-        #caffe.set_solver_count(2)
-        #caffe.set_solver_rank(gpuID+1)
-        #caffe.set_multiprocess(True)
 
         print("starting backward pass")
         grads = net.backward(diffs=['data'])
