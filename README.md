@@ -1,6 +1,3 @@
-
-
-# 
 <h3 align="center">
 <p>Pick-Object-Attack
 </h3>
