@@ -26,7 +26,6 @@ If you use our source code, please cite our paper:
 1. Clone our repository
 ```buildoutcfg
 git clone https://github.com/omidmnezami/pick-object-attack.git
-
 ```
 
 2. Clone the bottom-up-attention repository and install the required libraries.

@@ -6,13 +6,11 @@ import time
 import sys
 
 
-gpuID = int(sys.argv[1])
+# you can change the gpuID as your device
+gpuID = 0
 
-if gpuID == 1:
-    imgs = np.load('./selected_images.npy')[:300]
-else:
-    imgs = np.load('./selected_images.npy')[300+350*(gpuID-2):300+350*(gpuID-1)]
-
+# load the list of selected images
+imgs = np.load('./selected_images.npy')
 
 i = 0
 

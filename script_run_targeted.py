@@ -5,12 +5,11 @@ import glob
 import time
 import sys
 
-gpuID = int(sys.argv[1])
+# you can change the gpuID as your device
+gpuID = 0
 
-if gpuID == 2:
-    imgs = np.load('./selected_images.npy')[:1000]
-else:
-    imgs = np.load('./selected_images.npy')[300+350*(gpuID-2):300+350*(gpuID-1)]
+# load the list of selected images
+imgs = np.load('./selected_images.npy')
 
 i = 0
 
@@ -27,7 +26,7 @@ for img in imgs:
     for r in range(10):
         random_class = np.random.randint(1599)+1
         file_output = fileName_main+'_'+str(random_class) +'.npy'
-        os.system('python ./code/pickbox_frequent.py '+ img +' '+ str(10000) + ' ' + 'True'+
+        os.system('python ./code/pickobject_frequent.py '+ img +' '+ str(10000) + ' ' + 'True'+
                   ' ' + str(random_class) + ' ' + file_output + ' ' + str(gpuID))
         i = i+1
 
