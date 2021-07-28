@@ -26,6 +26,7 @@ If you use our source code, please cite our paper:
 1. Clone our repository
 ```buildoutcfg
 git clone https://github.com/omidmnezami/pick-object-attack.git
+cd pick-object-attack
 ```
 
 2. Clone the bottom-up-attention repository and install the required libraries.
@@ -33,6 +34,8 @@ git clone https://github.com/omidmnezami/pick-object-attack.git
 ```buildoutcfg
 git clone https://github.com/peteanderson80/bottom-up-attention.git
 ```
+
+3. resnet101_faster_rcnn_final.caffemodel and test_gradient.prototxt should be copied to bottom-up-attention/demo directory.
  
  
 ### Run
