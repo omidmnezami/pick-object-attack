@@ -22,7 +22,7 @@ for img in imgs:
 
     # if fileName_main in open('results.txt').read():
     #     continue
-
+    # TODO: need if-else for confident/frequent
     for r in range(10):
         random_class = np.random.randint(1599)+1
         file_output = fileName_main+'_'+str(random_class) +'.npy'
