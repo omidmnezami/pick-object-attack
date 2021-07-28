@@ -35,7 +35,7 @@ cd pick-object-attack
 git clone https://github.com/peteanderson80/bottom-up-attention.git
 ```
 
-3. ``resnet101_faster_rcnn_final.caffemodel`` and ``test_gradient.prototxt`` should be kept in ``bottom-up-attention/demo`` directory.
+3. ``resnet101_faster_rcnn_final.caffemodel`` and ``test_gradient.prototxt`` should be in ``bottom-up-attention/demo`` directory.
  
  
 ### Run
