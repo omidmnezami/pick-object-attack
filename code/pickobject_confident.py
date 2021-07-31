@@ -12,12 +12,18 @@ import numpy as np
 import time
 import sys
 from collections import Counter
+import yaml
+
+with open("pickobject_config.yaml", 'r') as stream:
+    try:
+        config = yaml.safe_load(stream)
+    except yaml.YAMLError as exc:
+        print(exc)
 
 #caffe.set_mode_gpu()
 #caffe.set_device(0)
 
-# change the following path as your local path
-cfg_from_file('experiments/cfgs/faster_rcnn_end2end_resnet.yml')
+cfg_from_file(config["model"]["cfg_file"])
 
 if __name__ == '__main__':
     t0 = time.time()
@@ -39,9 +45,8 @@ if __name__ == '__main__':
     #caffe.set_multiprocess(True)
 
     ## model and prototxt
-    weights = 'demo/resnet101_faster_rcnn_final.caffemodel'
-    prototxt_test = 'demo/test.prototxt'
-    prototxt_train = 'demo/test_gradient.prototxt'
+    weights = config["model"]["weights"]
+    prototxt_train = config["model"]["prototxt"]
 
     ## specifiy min and max changes
     eps = 200
@@ -50,7 +55,7 @@ if __name__ == '__main__':
 
     MEANS = np.array([[102.9801, 115.9465, 122.7717]])
 
-    data_path = '../bottom-up-attention/data/genome/1600-400-20'
+    data_path = config["data"]["data_path"]
     classes = ['__nothing__']
     with open(os.path.join(data_path, 'objects_vocab.txt')) as f:
         for object in f.readlines():
@@ -270,18 +275,13 @@ if __name__ == '__main__':
         grad = np.squeeze(grad)
         grad = np.transpose(grad, (1, 2, 0))
         grad = cv2.resize(grad,(adversarial_x.shape[1],adversarial_x.shape[0]),interpolation=cv2.INTER_LINEAR)
-        print np.nonzero(grad), 'image change before ========='
 	grad *= m
-        print np.nonzero(grad), 'image change after ========='
         if targeted:
              adversarial_x = np.clip(adversarial_x - grad, clip_min, clip_max)
         else:
              adversarial_x = np.clip(adversarial_x + grad, clip_min, clip_max)
          
         adversarial_x = np.clip(adversarial_x, 0.0, 255.0)
-        print 'loss====== ', net.blobs['loss_cls'].data
-        print 'expected loss==', np.mean(-1*np.log(net.blobs['cls_prob'].data[:, target_idx]))
-        print 'learning rate==', lr
         attack_try = attack_try + 1
 
     t1 = time.time()

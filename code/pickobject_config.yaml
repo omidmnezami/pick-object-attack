@@ -1,0 +1,11 @@
+
+### DATA ###
+data:
+  data_path: bottom-up-attention/data/genome/1600-400-20
+
+### MODEL ###
+model:
+  cfg_file: bottom-up-attention/experiments/cfgs/faster_rcnn_end2end_resnet.yml
+  weights: bottom-up-attention/demo/resnet101_faster_rcnn_final.caffemodel
+  prototxt: bottom-up-attention/demo/test_gradient.prototxts
+

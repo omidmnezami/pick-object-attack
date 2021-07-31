@@ -36,16 +36,27 @@ git clone https://github.com/peteanderson80/bottom-up-attention.git
 ```
 
 3. ``resnet101_faster_rcnn_final.caffemodel`` and ``test_gradient.prototxt`` should be in ``bottom-up-attention/demo`` directory.
+```buildoutcfg
+# you need to do the same for resnet101_faster_rcnn_final.caffemodel after downloading
+cp test_gradient.prototxt bottom-up-attention/demo
+```
  
  
 ### Run
 ```buildoutcfg
-cd pick-object-attack/
+# you can update the paths in code/pickobject_config.yaml if needed as your local paths
+# run the targeted attack against the most confident object
+python script_run_targeted.py 1
 
-# run the targeted attack (you need to change the paths of the pre-trained model & the config files as your local paths)
-python script_run_targeted.py
+# run the targeted attack against the most frequent object
+python script_run_targeted.py 0
 
-# run the nontargeted attack
-python script_run_nontargeted.py
+# run the nontargeted attack against the most confident object
+python script_run_nontargeted.py 1
 
+# run the nontargeted attack against the most frequent object
+python script_run_nontargeted.py 0
+
+# run the nontargeted attack against all objects
+python script_run_attack_all.py
 ```

@@ -15,6 +15,8 @@ i = 0
 
 start = time.time()
 
+CONFIDENT = int(sys.argv[1])
+
 for img in imgs:
      
     path, fileName = os.path.split(img)
@@ -26,8 +28,14 @@ for img in imgs:
     for r in range(10):
         random_class = np.random.randint(1599)+1
         file_output = fileName_main+'_'+str(random_class) +'.npy'
-        os.system('python ./code/pickobject_frequent.py '+ img +' '+ str(10000) + ' ' + 'True'+
-                  ' ' + str(random_class) + ' ' + file_output + ' ' + str(gpuID))
+
+        if CONFIDENT:
+            os.system('python ./code/pickobject_confident.py ' + img + ' ' + str(10000) + ' ' + 'True' +
+                      ' ' + str(random_class) + ' ' + file_output + ' ' + str(gpuID))
+        else:
+            os.system('python ./code/pickobject_frequent.py '+ img +' '+ str(10000) + ' ' + 'True'+
+                      ' ' + str(random_class) + ' ' + file_output + ' ' + str(gpuID))
+
         i = i+1
 
 end = time.time()

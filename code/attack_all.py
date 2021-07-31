@@ -12,18 +12,23 @@ import numpy as np
 import time
 import sys
 from collections import Counter
+from copy import deepcopy
+import yaml
+
+with open("pickobject_config.yaml", 'r') as stream:
+    try:
+        config = yaml.safe_load(stream)
+    except yaml.YAMLError as exc:
+        print(exc)
 
 #caffe.set_mode_gpu()
 #caffe.set_device(0)
 
-# change the following path as your local path
-cfg_from_file('experiments/cfgs/faster_rcnn_end2end_resnet.yml')
+cfg_from_file(config["model"]["cfg_file"])
 
 if __name__ == '__main__':
     t0 = time.time()
     input_file = sys.argv[1]
-
-    #target_idx = int(sys.argv[2]) # target class
     lr = float(sys.argv[2]) # initial learning rate
     targeted = bool(sys.argv[3]=='True')
     print(targeted)
@@ -35,11 +40,13 @@ if __name__ == '__main__':
 
     caffe.set_mode_gpu()   
     caffe.set_device(gpuID)
+    #caffe.set_solver_count(2)
+    #caffe.set_solver_rank(gpuID)
+    #caffe.set_multiprocess(True)
 
     ## model and prototxt
-    weights = 'demo/resnet101_faster_rcnn_final.caffemodel'
-    prototxt_test = 'demo/test.prototxt'
-    prototxt_train = 'demo/test_gradient.prototxt'
+    weights = config["model"]["weights"]
+    prototxt_train = config["model"]["prototxt"]
 
     ## specifiy min and max changes
     eps = 200
@@ -48,7 +55,7 @@ if __name__ == '__main__':
 
     MEANS = np.array([[102.9801, 115.9465, 122.7717]])
 
-    data_path = '../bottom-up-attention/data/genome/1600-400-20'
+    data_path = config["data"]["data_path"]
     classes = ['__nothing__']
     with open(os.path.join(data_path, 'objects_vocab.txt')) as f:
         for object in f.readlines():
@@ -119,38 +126,29 @@ if __name__ == '__main__':
     single_start_point = adversarial_x
 
     cls_score_all = net.blobs['cls_score'].data[:, 1:].argmax(axis=1) + 1
+    original_cls = deepcopy(cls_score_all)
+
     a=net.blobs['cls_score'].data[:, 1:]
     print np.unravel_index(a.argmax(), a.shape)
-    target_idx = Counter(cls_score_all).most_common()[0][0]
-    #target_idx= np.unravel_index(a.argmax(), a.shape)[1]+1
 
-    output_file_numpy = str(target_idx) + '_' + output_file_numpy
-    
-    mul_attack_box_indx = np.where(cls_score_all == target_idx)[0]
+    output_file_numpy = 'all' + '_' + output_file_numpy
 
     print cls_score_all
     print cls_score_all.shape
-    print np.where(cls_score_all==target_idx)
-    print len(np.where(cls_score_all == target_idx)[0])
-    print classes[target_idx], "the label of the targetted index"
 
     cls_boxes = net.blobs['rois'].data[:,1:5] / im_scales[0]
-    m = np.zeros(adversarial_x.shape)
-
-    for ind in np.where(cls_score_all==target_idx)[0]:
-        mul_attack_box = cls_boxes[ind]
-        print mul_attack_box
-        m[int(math.floor(mul_attack_box[1])):int(math.floor(mul_attack_box[3])),
-        int(math.floor(mul_attack_box[0])):int(math.floor(mul_attack_box[2])), :] = 1
     
     attack_try = 0
+   
+    remained_cls=list(set(range(1,1601)).difference(original_cls))
+    target_idx = np.random.choice(remained_cls)
  
     while (True):
         
         caffe.set_mode_gpu()
         caffe.set_device(gpuID)
 
-        if (( attack_try +1 ) % 60 == 0): # change it to 10 later
+        if (( attack_try +1 ) % 120 == 0): # change it to 10 later
             adversarial_x = single_start_point
             lr = lr * (1.2)
         if (lr > 10000):
@@ -191,42 +189,24 @@ if __name__ == '__main__':
         num_rois = net.blobs['rois'].data.shape[0]
         scores = net.blobs['cls_score'].data
         cls_score_all = scores[:, 1:].argmax(axis=1) + 1
-        mul_attack_box_indx = np.where(cls_score_all == target_idx)[0]
-        print "number of bounding boxes for attack",len(mul_attack_box_indx)
         print "number of rois", num_rois
-
-        # Think about what extra condition to add here if it's a targeted attack e.g. 'ocean'(index = 65) for the current image
-        if len(mul_attack_box_indx)==0 and targeted:
-              num_boxes = np.where(cls_score_all == new_class)[0]
-              print "number of boxes with target label",len(num_boxes)
-              probs = net.blobs['cls_prob'].data[num_boxes,new_class]
-              print("probabilities for target class:",probs)
-              if len(num_boxes) > 0:#and np.max(probs)>0.6:
-                   np.save(output_file_numpy, adversarial_x)
-                   np.save('probs_'+output_file_numpy, probs)
-                   break
-              else:
-		   boxes = net.blobs['rois'].data[:,1:5]/im_scales[0]
-                   indexes = [i for i,x in enumerate(boxes) if np.all(m[int(math.floor(x[1])):int(math.floor(x[3])),int(math.floor(x[0])):int(math.floor(x[2]))])]
-		   print 'indexes', indexes, 'indexes'
-            	   indexes = np.array(indexes)
-	           mul_attack_box_indx = indexes[np.array([scores[indexes,new_class].argmax(axis=0)])]
-		   print "new bounding box for attack", mul_attack_box_indx, "new bounding box for attack"
+       
+        intersection_cls = set(cls_score_all).intersection(original_cls)
+        print 'intersection_cls_len= ', len(intersection_cls) , 'intersection_cls= ', intersection_cls, 'target_idx= ', target_idx
               		
-        elif len(mul_attack_box_indx)==0 and not targeted:
+        if len(intersection_cls)==0 and not targeted:
               np.save(output_file_numpy, adversarial_x)
 	      boxes = net.blobs['rois'].data[:,1:5]/im_scales[0]
-              indexes = [i for i,x in enumerate(boxes) if np.all(m[int(math.floor(x[1])):int(math.floor(x[3])),int(math.floor(x[0])):int(math.floor(x[2]))])]
-              print 'indexes', indexes, 'indexes'
-              indexes = np.array(indexes)
-              probs = net.blobs['cls_prob'].data[indexes, target_idx]
+              probs = net.blobs['cls_prob'].data
+              np.save('original_cls_'+output_file_numpy, original_cls)
               np.save('probs_'+output_file_numpy, probs)
               break
 
-        gt_labels = np.zeros((len(mul_attack_box_indx)), dtype=float)
+        gt_labels = np.zeros((num_rois), dtype=float)
         gt_labels += -1
 
-        cls_temp = np.zeros((len(mul_attack_box_indx),1), dtype=int)
+        cls_temp = np.zeros((num_rois, 1), dtype=int)
+
         blobs['labels'] = gt_labels
         blobs['predicted_cls'] = cls_temp
 
@@ -256,12 +236,6 @@ if __name__ == '__main__':
         if 'predicted_cls' in net.blobs:
             forward_kwargs['predicted_cls'] = blobs['predicted_cls'].astype(np.float32, copy=False)
 
-        for key in net.blobs.keys():
-            if len(net.blobs[key].data.shape)>0 and net.blobs[key].data.shape[0] == num_rois:
-                arr_np = net.blobs[key].data[mul_attack_box_indx,:]
-                net.blobs[key].reshape(*(arr_np.shape))
-                net.blobs[key].data[...] = arr_np
-
         print("starting forward pass")
         net.forward(start='roi_pool5',**forward_kwargs)
         caffe.set_mode_cpu()
@@ -269,29 +243,22 @@ if __name__ == '__main__':
         print("starting backward pass")
         grads = net.backward(diffs=['data'])
         print("backward pass done")
-        #caffe.set_mode_gpu()
         grad_data = grads['data']
         grad = grad_data * lr
         grad = np.squeeze(grad)
         grad = np.transpose(grad, (1, 2, 0))
         grad = cv2.resize(grad,(adversarial_x.shape[1],adversarial_x.shape[0]),interpolation=cv2.INTER_LINEAR)
-        print np.nonzero(grad), 'image change before ========='
-	grad *= m
-        print np.nonzero(grad), 'image change after ========='
         if targeted:
              adversarial_x = np.clip(adversarial_x - grad, clip_min, clip_max)
         else:
-             adversarial_x = np.clip(adversarial_x + grad, clip_min, clip_max)
+             adversarial_x = np.clip(adversarial_x - grad, clip_min, clip_max)
          
         adversarial_x = np.clip(adversarial_x, 0.0, 255.0)
-        print 'loss====== ', net.blobs['loss_cls'].data
-        print 'expected loss==', np.mean(-1*np.log(net.blobs['cls_prob'].data[:, target_idx]))
-        print 'learning rate==', lr
         attack_try = attack_try + 1
 
     t1 = time.time()
     print("Time:",(t1-t0))
-    f = open('results.txt', 'a')
+    f = open('results_all.txt', 'a')
     f.write(output_file_numpy + ' ' + str(attack_try) + ' ' + str(lr) + '\n')
     f.close()
 

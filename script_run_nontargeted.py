@@ -15,6 +15,8 @@ i = 0
 
 start = time.time()
 
+CONFIDENT = int(sys.argv[1])
+
 for img in imgs:
      random_class = 'untargeted'
      path, fileName = os.path.split(img)
@@ -23,10 +25,14 @@ for img in imgs:
      # if fileName_main in open('results_untargeted.txt').read():
      #    continue
 
-     # TODO: need if-else for confident/frequent
      file_output = fileName_main+'_'+str(random_class) +'.npy'
-     os.system('python ./code/pickobject_confident_nontargeted.py '+ img +' '+ str(10000) + ' ' + 'False'+
-               ' ' + random_class + ' ' + file_output + ' ' + str(gpuID))
+
+     if CONFIDENT:
+          os.system('python ./code/pickobject_confident.py '+ img +' '+ str(10000) + ' ' + 'False'+
+                    ' ' + random_class + ' ' + file_output + ' ' + str(gpuID))
+     else:
+          os.system('python ./code/pickobject_frequent.py ' + img + ' ' + str(10000) + ' ' + 'False' +
+                    ' ' + random_class + ' ' + file_output + ' ' + str(gpuID))
      i = i+1
 
 end = time.time()
