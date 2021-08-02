@@ -283,6 +283,7 @@ if __name__ == '__main__':
              adversarial_x = np.clip(adversarial_x + grad, clip_min, clip_max)
          
         adversarial_x = np.clip(adversarial_x, 0.0, 255.0)
+	print 'loss====== ', net.blobs['loss_cls'].data
 	if targeted:
              print 'expected loss==', np.mean(-1*np.log(net.blobs['cls_prob'].data[:, new_class]))
 	else:
