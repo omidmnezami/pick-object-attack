@@ -15,7 +15,7 @@ from collections import Counter
 from copy import deepcopy
 import yaml
 
-with open("pickobject_config.yaml", 'r') as stream:
+with open("./code/pickobject_config.yaml", 'r') as stream:
     try:
         config = yaml.safe_load(stream)
     except yaml.YAMLError as exc:
