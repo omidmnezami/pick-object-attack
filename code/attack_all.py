@@ -21,9 +21,6 @@ with open("./code/pickobject_config.yaml", 'r') as stream:
     except yaml.YAMLError as exc:
         print(exc)
 
-#caffe.set_mode_gpu()
-#caffe.set_device(0)
-
 cfg_from_file(config["model"]["cfg_file"])
 
 if __name__ == '__main__':
@@ -33,16 +30,13 @@ if __name__ == '__main__':
     targeted = bool(sys.argv[3]=='True')
     print(targeted)
     if targeted:
-          new_class = int(sys.argv[4]) # desired class for targeted attack
+          new_class = int(sys.argv[4])
     
     output_file_numpy = sys.argv[5]
     gpuID = int(sys.argv[6])
 
     caffe.set_mode_gpu()   
     caffe.set_device(gpuID)
-    #caffe.set_solver_count(2)
-    #caffe.set_solver_rank(gpuID)
-    #caffe.set_multiprocess(True)
 
     ## model and prototxt
     weights = config["model"]["weights"]
@@ -148,7 +142,7 @@ if __name__ == '__main__':
         caffe.set_mode_gpu()
         caffe.set_device(gpuID)
 
-        if (( attack_try +1 ) % 120 == 0): # change it to 10 later
+        if (( attack_try +1 ) % 120 == 0):
             adversarial_x = single_start_point
             lr = lr * (1.2)
         if (lr > 10000):
@@ -194,7 +188,7 @@ if __name__ == '__main__':
         intersection_cls = set(cls_score_all).intersection(original_cls)
         print 'intersection_cls_len= ', len(intersection_cls) , 'intersection_cls= ', intersection_cls, 'target_idx= ', target_idx
               		
-        if len(intersection_cls)==0 and not targeted:
+        if len(intersection_cls)==0:
               np.save(output_file_numpy, adversarial_x)
 	      boxes = net.blobs['rois'].data[:,1:5]/im_scales[0]
               probs = net.blobs['cls_prob'].data
@@ -210,13 +204,8 @@ if __name__ == '__main__':
         blobs['labels'] = gt_labels
         blobs['predicted_cls'] = cls_temp
 
-
-        if targeted:        
-             blobs['labels'][:] = new_class
-             blobs['predicted_cls'][:] = new_class
-        else:
-             blobs['labels'][:] = target_idx
-             blobs['predicted_cls'][:] = target_idx
+        blobs['labels'][:] = target_idx
+        blobs['predicted_cls'][:] = target_idx
 
         net.blobs['data'].reshape(*(blobs['data'].shape))
 
@@ -248,10 +237,7 @@ if __name__ == '__main__':
         grad = np.squeeze(grad)
         grad = np.transpose(grad, (1, 2, 0))
         grad = cv2.resize(grad,(adversarial_x.shape[1],adversarial_x.shape[0]),interpolation=cv2.INTER_LINEAR)
-        if targeted:
-             adversarial_x = np.clip(adversarial_x - grad, clip_min, clip_max)
-        else:
-             adversarial_x = np.clip(adversarial_x - grad, clip_min, clip_max)
+        adversarial_x = np.clip(adversarial_x - grad, clip_min, clip_max)
          
         adversarial_x = np.clip(adversarial_x, 0.0, 255.0)
 	print 'loss====== ', net.blobs['loss_cls'].data
@@ -263,5 +249,3 @@ if __name__ == '__main__':
     f = open('results_all.txt', 'a')
     f.write(output_file_numpy + ' ' + str(attack_try) + ' ' + str(lr) + '\n')
     f.close()
-
-    #np.save('lr'+output_file_numpy, lr)

@@ -8,7 +8,8 @@ import sys
 # you can change the gpuID as your device
 gpuID = 0
 
-# load the list of selected images
+# load the path list of selected images
+# (We selected these images from the dev set of MSCOCO. You need to change the path list according to your local paths.)
 imgs = np.load('./selected_images.npy')
 
 i = 0

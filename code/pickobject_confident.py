@@ -20,15 +20,11 @@ with open("./code/pickobject_config.yaml", 'r') as stream:
     except yaml.YAMLError as exc:
         print(exc)
 
-#caffe.set_mode_gpu()
-#caffe.set_device(0)
-
 cfg_from_file(config["model"]["cfg_file"])
 
 if __name__ == '__main__':
     t0 = time.time()
     input_file = sys.argv[1]
-    #target_idx = int(sys.argv[2]) # target class
     lr = float(sys.argv[2]) # initial learning rate
     targeted = bool(sys.argv[3]=='True')
     print(targeted)
@@ -40,9 +36,6 @@ if __name__ == '__main__':
 
     caffe.set_mode_gpu()   
     caffe.set_device(gpuID)
-    #caffe.set_solver_count(2)
-    #caffe.set_solver_rank(gpuID)
-    #caffe.set_multiprocess(True)
 
     ## model and prototxt
     weights = config["model"]["weights"]
@@ -131,7 +124,6 @@ if __name__ == '__main__':
     target_idx= np.unravel_index(a.argmax(), a.shape)[1]+1
 
     output_file_numpy = str(target_idx) + '_' + output_file_numpy
-    #sys.exit()
     
     mul_attack_box_indx = np.where(cls_score_all == target_idx)[0]
 
@@ -157,7 +149,7 @@ if __name__ == '__main__':
         caffe.set_mode_gpu()
         caffe.set_device(gpuID)
 
-        if (( attack_try +1 ) % 60 == 0): # change it to 10 later
+        if (( attack_try +1 ) % 60 == 0):
             adversarial_x = single_start_point
             lr = lr * (1.2)
         if (lr > 10000):
@@ -207,7 +199,7 @@ if __name__ == '__main__':
               print "number of boxes with target label",len(num_boxes)
               probs = net.blobs['cls_prob'].data[num_boxes,new_class]
               print("probabilities for target class:",probs)
-              if len(num_boxes) > 0:#and np.max(probs)>0.6:
+              if len(num_boxes) > 0:
                    np.save(output_file_numpy, adversarial_x)
                    np.save('probs_'+output_file_numpy, probs)
                    break
@@ -294,5 +286,3 @@ if __name__ == '__main__':
     f = open('results.txt', 'a')
     f.write(output_file_numpy + ' ' + str(attack_try) + ' ' + str(lr) + '\n')
     f.close()
-
-    #np.save('lr'+output_file_numpy, lr)

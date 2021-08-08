@@ -43,6 +43,9 @@ cp test_gradient.prototxt bottom-up-attention/demo
  
  
 ### Run
+Scripts to run targeted/nontargeted attacks:
+We run the forward pass on GPU and the backward pass on CPU.
+If you have enough GPU memory, you can run both on GPU. To do so, you need to comment "caffe.set_mode_cpu()" in the corresponding pickobject code.
 ```buildoutcfg
 # you can update the paths in code/pickobject_config.yaml if needed as your local paths
 # run the targeted attack against the most confident object
