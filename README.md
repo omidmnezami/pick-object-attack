@@ -13,11 +13,17 @@ Many recent studies have shown that deep neural models are vulnerable to adversa
 ### Reference
 If you use our source code, please cite our paper:
 ```
-@article{nezami2020pick,
-  title={Pick-Object-Attack: Type-Specific Adversarial Attack for Object Detection},
-  author={Nezami, Omid Mohamad and Chaturvedi, Akshay and Dras, Mark and Garain, Utpal},
-  journal={arXiv preprint arXiv:2006.03184},
-  year={2020}
+@article{MOHAMADNEZAMI2021103257,
+title = {Pick-Object-Attack: Type-specific adversarial attack for object detection},
+journal = {Computer Vision and Image Understanding},
+volume = {211},
+pages = {103257},
+year = {2021},
+issn = {1077-3142},
+doi = {https://doi.org/10.1016/j.cviu.2021.103257},
+url = {https://www.sciencedirect.com/science/article/pii/S1077314221001016},
+author = {Omid {Mohamad Nezami} and Akshay Chaturvedi and Mark Dras and Utpal Garain},
+keywords = {Adversarial attack, Faster R-CNN, Deep learning, Image captioning, Computer vision}
 }
 ```
 
